@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Resolver Desigualdades</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+  <style>
+    body { font-family: Arial; margin: 30px; background-color: #f0f0f0; }
+    input, button { padding: 10px; font-size: 16px; margin-top: 10px; }
+    #resultado { margin-top: 20px; padding: 15px; background: white; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Calculadora de Desigualdades Lineales y Cuadráticas</h2>
+  <p>Ejemplos válidos: <b>2x+3<7</b>, <b>x^2 - 4x + 3 >= 0</b></p>
+  <input type="text" id="entrada" placeholder="Escribe la desigualdad">
+  <br>
+  <button onclick="resolverDesigualdad()">Resolver</button>
+
+  <div id="resultado"></div>
+
+  <script>
+    function resolverDesigualdad() {
+      const entrada = document.getElementById("entrada").value;
+      const resultado = document.getElementById("resultado");
+
+      try {
+        const operadores = ['<=', '>=', '<', '>'];
+        let operador = operadores.find(op => entrada.includes(op));
+        if (!operador) throw 'Operador inválido o faltante.';
+
+        let [ladoIzq, ladoDer] = entrada.split(operador).map(e => e.replace(/\s/g, ''));
+        const exprIzq = math.parse(ladoIzq).compile();
+        const exprDer = math.parse(ladoDer).compile();
+
+        const f = x => exprIzq.evaluate({x}) - exprDer.evaluate({x});
+
+        let puntosCriticos = [];
+        for (let x = -100; x <= 100; x += 0.1) {
+          let val1 = f(x);
+          let val2 = f(x + 0.1);
+          if (val1 * val2 < 0 || Math.abs(val1) < 0.05) {
+            puntosCriticos.push(Number(x.toFixed(2)));
+          }
+        }
+
+        puntosCriticos = [...new Set(puntosCriticos.map(n => Number(n.toFixed(1))))];
+
+        // Evaluar intervalos
+        const intervalos = [];
+        for (let i = -Infinity, j = 0; j <= puntosCriticos.length; j++) {
+          let a = puntosCriticos[j] || Infinity;
+          let mid = (i === -Infinity) ? a - 1 : (a + (puntosCriticos[j - 1] || 0)) / 2;
+          if (operador === '<') {
+            if (f(mid) < 0) intervalos.push([i, a]);
+          } else if (operador === '<=') {
+            if (f(mid) <= 0) intervalos.push([i, a]);
+          } else if (operador === '>') {
+            if (f(mid) > 0) intervalos.push([i, a]);
+          } else if (operador === '>=') {
+            if (f(mid) >= 0) intervalos.push([i, a]);
+          }
+          i = a;
+        }
+
+        const texto = intervalos.map(r => {
+          let [a, b] = r;
+          return `${a === -Infinity ? '(-∞' : '[' + a}, ${b === Infinity ? '∞)' : b + ']'}`;
+        }).join(' ∪ ');
+
+        resultado.innerHTML = `<strong>Solución:</strong><br>${texto || "No hay solución real"}`;
+      } catch (err) {
+        resultado.innerHTML = `<span style="color:red;">Error: ${err}</span>`;
+      }
+    }
+  </script>
+</body>
+</html>
