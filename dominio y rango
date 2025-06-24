@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dominio y Rango</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Calculadora de Dominio y Rango (Aproximado)</h2>
+
+  <label for="funcion">Ingresa una función en x (usa Math):</label><br>
+  <input type="text" id="funcion" placeholder="Ej: Math.sin(x), x*x, 1/x"><br>
+
+  <label for="limites">Rango de valores de x (ej: -10 a 10):</label><br>
+  Desde: <input type="number" id="xMin" value="-10">
+  Hasta: <input type="number" id="xMax" value="10"><br>
+
+  <button onclick="calcularDominioYRango()">Calcular</button>
+
+  <h3>Resultados:</h3>
+  <p><strong>Dominio (evaluado en el intervalo):</strong> <span id="dominio"></span></p>
+  <p><strong>Rango (aproximado):</strong> <span id="rango"></span></p>
+
+  <script>
+    function calcularDominioYRango() {
+      const expr = document.getElementById("funcion").value;
+      const xMin = parseFloat(document.getElementById("xMin").value);
+      const xMax = parseFloat(document.getElementById("xMax").value);
+
+      let xVals = [];
+      let yVals = [];
+
+      for (let x = xMin; x <= xMax; x += 0.1) {
+        try {
+          let y = eval(expr.replace(/x/g, `(${x})`));
+          if (isFinite(y)) {
+            xVals.push(x.toFixed(2));
+            yVals.push(y);
+          }
+        } catch (e) {
+          continue; // Si hay error (como división por cero), lo ignora
+        }
+      }
+
+      if (yVals.length === 0) {
+        document.getElementById("dominio").textContent = "No se pudo evaluar en este intervalo.";
+        document.getElementById("rango").textContent = "No disponible.";
+        return;
+      }
+
+      const yMin = Math.min(...yVals).toFixed(2);
+      const yMax = Math.max(...yVals).toFixed(2);
+
+      document.getElementById("dominio").textContent = `[${xMin}, ${xMax}] (donde la función se puede evaluar)`;
+      document.getElementById("rango").textContent = `[${yMin}, ${yMax}] (aproximado)`;
+    }
+  </script>
+</body>
+</html>
