@@ -1,80 +1,103 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Calculadora de Ecuaciones e Inecuaciones</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    input, button {
-      padding: 10px;
-      margin: 5px;
-    }
-    #resultado {
-      margin-top: 20px;
-      font-weight: bold;
-      white-space: pre-wrap;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, select, button { font-size: 1.2em; padding: 5px; margin: 5px; }
+    #resultado { margin-top: 20px; background: #f0f0f0; padding: 15px; border-radius: 5px; }
+    .paso { margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <h2>Calculadora de Ecuaciones e Inecuaciones Lineales</h2>
+  <h1>Calculadora de Ecuaciones e Inecuaciones Lineales</h1>
+  <p>Resuelve ecuaciones o inecuaciones del tipo: <strong>ax + b [operador] 0</strong></p>
 
-  <p>Ejemplo: <code>2x + 3 = 7</code> ó <code>3x - 5 < 10</code></p>
+  <label for="a">a (coeficiente de x): </label>
+  <input type="number" id="a" step="any" /><br/>
 
-  <input type="text" id="input" placeholder="Escribe tu ecuación o inecuación">
-  <button onclick="resolver()">Resolver paso a paso</button>
+  <label for="b">b (término independiente): </label>
+  <input type="number" id="b" step="any" /><br/>
+
+  <label for="operador">Operador: </label>
+  <select id="operador">
+    <option value="=">=</option>
+    <option value="<">&lt;</option>
+    <option value=">">&gt;</option>
+    <option value="<=">&le;</option>
+    <option value=">=">&ge;</option>
+  </select><br/>
+
+  <button onclick="resolver()">Resolver</button>
 
   <div id="resultado"></div>
 
   <script>
     function resolver() {
-      const entrada = document.getElementById("input").value.replace(/\s+/g, "");
-      const resultadoDiv = document.getElementById("resultado");
-      const operadores = ["=", "<", ">", "<=", ">="];
-      let operador = null;
+      const a = parseFloat(document.getElementById('a').value);
+      const b = parseFloat(document.getElementById('b').value);
+      const op = document.getElementById('operador').value;
+      const resultadoDiv = document.getElementById('resultado');
+      resultadoDiv.innerHTML = '';
 
-      for (const op of operadores) {
-        if (entrada.includes(op)) {
-          operador = op;
-          break;
+      if (isNaN(a) || isNaN(b)) {
+        resultadoDiv.innerHTML = '<p style="color:red;">Por favor ingresa valores válidos para a y b.</p>';
+        return;
+      }
+
+      // Mostrar la ecuación o inecuación dada
+      resultadoDiv.innerHTML += `<div class="paso"><b>Ecuación/Inecuación dada:</b> ${a}x ${b >= 0 ? '+ ' + b : '- ' + (-b)} ${op} 0</div>`;
+
+      // Caso a = 0 (no depende de x)
+      if (a === 0) {
+        if (op === '=') {
+          if (b === 0) {
+            resultadoDiv.innerHTML += `<div class="paso">Como a=0 y b=0, la ecuación es <i>0 = 0</i>. Por lo tanto, cualquier valor de x es solución.</div>`;
+          } else {
+            resultadoDiv.innerHTML += `<div class="paso">Como a=0 y b=${b}, la ecuación es <i>${b} = 0</i>, lo cual es falso. No hay solución.</div>`;
+          }
+        } else {
+          // Inecuación
+          let desigualdadValida;
+          switch(op) {
+            case '<': desigualdadValida = (b < 0); break;
+            case '>': desigualdadValida = (b > 0); break;
+            case '<=': desigualdadValida = (b <= 0); break;
+            case '>=': desigualdadValida = (b >= 0); break;
+          }
+          if (desigualdadValida) {
+            resultadoDiv.innerHTML += `<div class="paso">Como a=0, la inecuación es <i>${b} ${op} 0</i> que es verdadera. Cualquier valor de x es solución.</div>`;
+          } else {
+            resultadoDiv.innerHTML += `<div class="paso">Como a=0, la inecuación es <i>${b} ${op} 0</i> que es falsa. No hay solución.</div>`;
+          }
         }
-      }
-
-      if (!operador) {
-        resultadoDiv.innerText = "Por favor, ingresa una ecuación o inecuación válida.";
         return;
       }
 
-      const [izq, der] = entrada.split(operador);
+      // Resolver ax + b [op] 0 despejando x:
+      // Pasos:
+      resultadoDiv.innerHTML += `<div class="paso">Paso 1: Restar ${b} en ambos lados:</div>`;
+      resultadoDiv.innerHTML += `<div class="paso">${a}x ${op} ${-b}</div>`;
 
-      // Se espera formato ax + b = c
-      const regex = /([-+]?\d*)x([+-]?\d+)?/;
-      const match = izq.match(regex);
+      resultadoDiv.innerHTML += `<div class="paso">Paso 2: Dividir ambos lados entre ${a} (${a > 0 ? "positivo" : "negativo"}, esto puede cambiar la dirección de la desigualdad):</div>`;
 
-      if (!match) {
-        resultadoDiv.innerText = "Formato no reconocido. Asegúrate de usar ecuaciones lineales con 'x'.";
-        return;
+      // Si a < 0, cambia la desigualdad de sentido
+      let opFinal = op;
+      if (a < 0 && op !== '=') {
+        // Cambiamos el símbolo de la desigualdad
+        if (op === '<') opFinal = '>';
+        else if (op === '>') opFinal = '<';
+        else if (op === '<=') opFinal = '>=';
+        else if (op === '>=') opFinal = '<=';
       }
 
-      const a = match[1] === "" || match[1] === "+" ? 1 : match[1] === "-" ? -1 : parseFloat(match[1]);
-      const b = match[2] ? parseFloat(match[2]) : 0;
-      const c = parseFloat(der);
+      const xResultado = (-b / a).toFixed(4);
 
-      let pasos = `Ecuación original: ${entrada}\n`;
-      pasos += `Paso 1: Identificamos términos -> a = ${a}, b = ${b}, c = ${c}\n`;
+      resultadoDiv.innerHTML += `<div class="paso">x ${opFinal} ${xResultado}</div>`;
 
-      pasos += `Paso 2: Restamos ${b} de ambos lados:\n`;
-      const paso2 = c - b;
-      pasos += `\t${a}x ${operador} ${paso2}\n`;
-
-      pasos += `Paso 3: Dividimos ambos lados para despejar x:\n`;
-      const resultado = paso2 / a;
-      pasos += `\tx ${operador} ${resultado}\n`;
-
-      resultadoDiv.innerText = pasos;
+      resultadoDiv.innerHTML += `<div class="paso" style="font-weight:bold;">Resultado:</div>`;
+      resultadoDiv.innerHTML += `<div class="paso">x ${opFinal} ${xResultado}</div>`;
     }
   </script>
 </body>
