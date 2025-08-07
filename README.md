@@ -1,26 +1,29 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <title>Calculadora de Ecuaciones e Inecuaciones</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    input, select, button { font-size: 1.2em; padding: 5px; margin: 5px; }
-    #resultado { margin-top: 20px; background: #f0f0f0; padding: 15px; border-radius: 5px; }
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
+    input, select, button { font-size: 1.2em; padding: 5px; margin: 5px 0; }
+    #resultado { margin-top: 20px; background: #f0f0f0; padding: 15px; border-radius: 5px; white-space: pre-wrap; }
     .paso { margin-bottom: 10px; }
+    button.download-btn { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+    button.download-btn:hover { background-color: #45a049; }
   </style>
 </head>
 <body>
   <h1>Calculadora de Ecuaciones e Inecuaciones Lineales</h1>
   <p>Resuelve ecuaciones o inecuaciones del tipo: <strong>ax + b [operador] 0</strong></p>
 
-  <label for="a">a (coeficiente de x): </label>
+  <label for="a">a (coeficiente de x): </label><br/>
   <input type="number" id="a" step="any" /><br/>
 
-  <label for="b">b (término independiente): </label>
+  <label for="b">b (término independiente): </label><br/>
   <input type="number" id="b" step="any" /><br/>
 
-  <label for="operador">Operador: </label>
+  <label for="operador">Operador: </label><br/>
   <select id="operador">
     <option value="=">=</option>
     <option value="<">&lt;</option>
@@ -30,6 +33,7 @@
   </select><br/>
 
   <button onclick="resolver()">Resolver</button>
+  <button class="download-btn" onclick="descargarHTML()">Descargar código HTML</button>
 
   <div id="resultado"></div>
 
@@ -42,23 +46,20 @@
       resultadoDiv.innerHTML = '';
 
       if (isNaN(a) || isNaN(b)) {
-        resultadoDiv.innerHTML = '<p style="color:red;">Por favor ingresa valores válidos para a y b.</p>';
+        resultadoDiv.innerHTML = 'Por favor ingresa valores válidos para a y b.';
         return;
       }
 
-      // Mostrar la ecuación o inecuación dada
-      resultadoDiv.innerHTML += `<div class="paso"><b>Ecuación/Inecuación dada:</b> ${a}x ${b >= 0 ? '+ ' + b : '- ' + (-b)} ${op} 0</div>`;
+      resultadoDiv.innerHTML += `Ecuación/Inecuación dada: ${a}x ${b >= 0 ? '+ ' + b : '- ' + (-b)} ${op} 0\n\n`;
 
-      // Caso a = 0 (no depende de x)
       if (a === 0) {
         if (op === '=') {
           if (b === 0) {
-            resultadoDiv.innerHTML += `<div class="paso">Como a=0 y b=0, la ecuación es <i>0 = 0</i>. Por lo tanto, cualquier valor de x es solución.</div>`;
+            resultadoDiv.innerHTML += 'Como a=0 y b=0, la ecuación es "0 = 0". Cualquier valor de x es solución.';
           } else {
-            resultadoDiv.innerHTML += `<div class="paso">Como a=0 y b=${b}, la ecuación es <i>${b} = 0</i>, lo cual es falso. No hay solución.</div>`;
+            resultadoDiv.innerHTML += `Como a=0 y b=${b}, la ecuación es "${b} = 0", que no es verdadera. No hay solución.`;
           }
         } else {
-          // Inecuación
           let desigualdadValida;
           switch(op) {
             case '<': desigualdadValida = (b < 0); break;
@@ -67,25 +68,21 @@
             case '>=': desigualdadValida = (b >= 0); break;
           }
           if (desigualdadValida) {
-            resultadoDiv.innerHTML += `<div class="paso">Como a=0, la inecuación es <i>${b} ${op} 0</i> que es verdadera. Cualquier valor de x es solución.</div>`;
+            resultadoDiv.innerHTML += `Como a=0, la inecuación es "${b} ${op} 0", que es verdadera. Cualquier valor de x es solución.`;
           } else {
-            resultadoDiv.innerHTML += `<div class="paso">Como a=0, la inecuación es <i>${b} ${op} 0</i> que es falsa. No hay solución.</div>`;
+            resultadoDiv.innerHTML += `Como a=0, la inecuación es "${b} ${op} 0", que es falsa. No hay solución.`;
           }
         }
         return;
       }
 
-      // Resolver ax + b [op] 0 despejando x:
-      // Pasos:
-      resultadoDiv.innerHTML += `<div class="paso">Paso 1: Restar ${b} en ambos lados:</div>`;
-      resultadoDiv.innerHTML += `<div class="paso">${a}x ${op} ${-b}</div>`;
+      resultadoDiv.innerHTML += `Paso 1: Restar ${b} en ambos lados:\n`;
+      resultadoDiv.innerHTML += `${a}x ${op} ${-b}\n\n`;
 
-      resultadoDiv.innerHTML += `<div class="paso">Paso 2: Dividir ambos lados entre ${a} (${a > 0 ? "positivo" : "negativo"}, esto puede cambiar la dirección de la desigualdad):</div>`;
+      resultadoDiv.innerHTML += `Paso 2: Dividir ambos lados entre ${a} (${a > 0 ? "positivo" : "negativo"}, esto puede cambiar la dirección de la desigualdad):\n`;
 
-      // Si a < 0, cambia la desigualdad de sentido
       let opFinal = op;
       if (a < 0 && op !== '=') {
-        // Cambiamos el símbolo de la desigualdad
         if (op === '<') opFinal = '>';
         else if (op === '>') opFinal = '<';
         else if (op === '<=') opFinal = '>=';
@@ -94,11 +91,26 @@
 
       const xResultado = (-b / a).toFixed(4);
 
-      resultadoDiv.innerHTML += `<div class="paso">x ${opFinal} ${xResultado}</div>`;
+      resultadoDiv.innerHTML += `x ${opFinal} ${xResultado}\n\n`;
 
-      resultadoDiv.innerHTML += `<div class="paso" style="font-weight:bold;">Resultado:</div>`;
-      resultadoDiv.innerHTML += `<div class="paso">x ${opFinal} ${xResultado}</div>`;
+      resultadoDiv.innerHTML += `Resultado:\n`;
+      resultadoDiv.innerHTML += `x ${opFinal} ${xResultado}`;
+    }
+
+    function descargarHTML() {
+      const htmlContent = document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], {type: 'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'calculadora-ecuaciones.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>
 </html>
+
+
